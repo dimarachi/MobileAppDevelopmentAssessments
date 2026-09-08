@@ -71,7 +71,6 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         const passwordIsValid = !isPasswordInvalid();
         return emailIsValid && passwordIsValid;
     };
-
     const isPasswordInvalid = (): boolean => {
         const invalidCheck = password.length < 6;
         setPasswordIsInvalid(invalidCheck);
