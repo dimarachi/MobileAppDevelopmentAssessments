@@ -71,7 +71,6 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         const passwordIsValid = !isPasswordInvalid();
         return emailIsValid && passwordIsValid;
     };
-
     const isPasswordInvalid = (): boolean => {
         const invalidCheck = password.length < 6;
         setPasswordIsInvalid(invalidCheck);
@@ -88,7 +87,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         <LinearGradient
             start={{ x: 0.0, y: 0.0 }}
             end={{ x: 1.0, y: 1.0 }}
-            colors={['#7048D8', '#7048D8']}
+            colors={['#031A62', '#00A3FF']}
             style={styles.gradientContainer}
         >
             {isFocused && <StatusBar animated translucent style="light" />}
@@ -111,17 +110,19 @@ export default function Login({ navigation }: StackScreenProps<any>) {
                     source={logoImg}
                 />
                 <Spacer size={80} />
+                <View style={styles.inputLabelRow}>
+                    <Text style={styles.label}>Email</Text>
+                </View>
                 <TextInput
-                    placeholder="Email"
-                    placeholderTextColor="#9AA7B1"
                     style={[styles.input, emailIsInvalid && styles.invalid]}
                     onChangeText={(value) => setEmail(value)}
                     onEndEditing={isEmailInvalid}
                 />
 
+                <View style={styles.inputLabelRow}>
+                    <Text style={styles.label}>Password</Text>
+                </View>
                 <TextInput
-                    placeholder="Password"
-                    placeholderTextColor="#9AA7B1"
                     style={[styles.input, passwordIsInvalid && styles.invalid]}
                     secureTextEntry={true}
                     onChangeText={(value) => setPassword(value)}
