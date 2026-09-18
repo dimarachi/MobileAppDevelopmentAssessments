@@ -30,6 +30,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
                 cameraPermission: 'The app accesses your camera to let you add pictures to events.',
             },
         ],
+        '@react-native-community/datetimepicker',
+        'expo-font',
+        'expo-status-bar',
     ],
     extra: {
         eas: {
