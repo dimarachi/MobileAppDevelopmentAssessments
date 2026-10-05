@@ -1,23 +1,78 @@
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
 import { StackScreenProps } from '@react-navigation/stack';
-import React, { useContext, useRef } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import * as Location from 'expo-location';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { Image, Platform, StyleSheet, Text, View } from 'react-native';
 import { RectButton } from 'react-native-gesture-handler';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { LatLng, Marker, PROVIDER_DEFAULT, PROVIDER_GOOGLE } from 'react-native-maps';
 import customMapStyle from '../../map-style.json';
 import * as MapSettings from '../constants/MapSettings';
 import { AuthenticationContext } from '../context/AuthenticationContext';
+import mapMarkerBlueImg from '../images/map-marker-blue.png';
+import mapMarkerGreyImg from '../images/map-marker-grey.png';
 import mapMarkerImg from '../images/map-marker.png';
+import * as api from '../services/api';
+import { Event } from '../types/Event';
+import { parseDateFieldFromJSONResponse } from '../utils';
 
 export default function EventsMap(props: StackScreenProps<any>) {
     const { navigation } = props;
     const authenticationContext = useContext(AuthenticationContext);
     const mapViewRef = useRef<MapView>(null);
+    const [events, setEvents] = useState<Event[]>([]);
+    const [userLocation, setUserLocation] = useState<LatLng>();
+    const [isMapReady, setIsMapReady] = useState(false);
+    const isFocused = useIsFocused();
+
+    useEffect(() => {
+        if (!isFocused) return;
+        api.getEvents()
+            .then((response) => {
+                const allEvents: Event[] = parseDateFieldFromJSONResponse(response.data, 'dateTime');
+                const now = new Date();
+                setEvents(allEvents.filter((event) => event.dateTime > now));
+            })
+            .catch((error) => console.log(error));
+
+        Location.requestForegroundPermissionsAsync()
+            .then(({ granted }) => (granted ? Location.getCurrentPositionAsync() : null))
+            .then((location) => {
+                if (location) {
+                    const { latitude, longitude } = location.coords;
+                    setUserLocation({ latitude, longitude });
+                }
+            })
+            .catch((error) => console.log(error));
+    }, [isFocused]);
+
+    // Re-fits whenever events are (re)loaded or the user's location arrives
+    useEffect(() => {
+        if (!isMapReady) return;
+        const coordinates: LatLng[] = events.map(({ position }) => ({
+            latitude: position.latitude,
+            longitude: position.longitude,
+        }));
+        if (userLocation) coordinates.push(userLocation);
+        if (coordinates.length === 0) return;
+        mapViewRef.current?.fitToCoordinates(coordinates, { edgePadding: MapSettings.EDGE_PADDING });
+    }, [isMapReady, events, userLocation]);
+
+    const hasVolunteered = (event: Event) => event.volunteersIds.includes(authenticationContext?.value?.id ?? '');
+    const volunteeredCount = events.filter(hasVolunteered).length;
+
+    const getMarkerImage = (event: Event) => {
+        if (hasVolunteered(event)) return mapMarkerBlueImg;
+        if (event.volunteersIds.length >= event.volunteersNeeded) return mapMarkerGreyImg;
+        return mapMarkerImg;
+    };
 
     const handleNavigateToCreateEvent = () => {};
 
-    const handleNavigateToEventDetails = () => {};
+    const handleNavigateToEventDetails = (event: Event) => {
+        navigation.navigate('EventDetails', { event: { ...event, dateTime: event.dateTime.toISOString() } });
+    };
 
     const handleLogout = async () => {
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
@@ -30,7 +85,7 @@ export default function EventsMap(props: StackScreenProps<any>) {
         <View style={styles.container}>
             <MapView
                 ref={mapViewRef}
-                provider={PROVIDER_GOOGLE}
+                provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : PROVIDER_DEFAULT}
                 initialRegion={MapSettings.DEFAULT_REGION}
                 style={styles.mapStyle}
                 customMapStyle={customMapStyle}
@@ -40,15 +95,7 @@ export default function EventsMap(props: StackScreenProps<any>) {
                 toolbarEnabled={false}
                 moveOnMarkerPress={false}
                 mapPadding={MapSettings.EDGE_PADDING}
-                onLayout={() =>
-                    mapViewRef.current?.fitToCoordinates(
-                        events.map(({ position }) => ({
-                            latitude: position.latitude,
-                            longitude: position.longitude,
-                        })),
-                        { edgePadding: MapSettings.EDGE_PADDING }
-                    )
-                }
+                onMapReady={() => setIsMapReady(true)}
             >
                 {events.map((event) => {
                     return (
@@ -58,16 +105,18 @@ export default function EventsMap(props: StackScreenProps<any>) {
                                 latitude: event.position.latitude,
                                 longitude: event.position.longitude,
                             }}
-                            onPress={handleNavigateToEventDetails}
+                            onPress={() => handleNavigateToEventDetails(event)}
                         >
-                            <Image resizeMode="contain" style={{ width: 48, height: 54 }} source={mapMarkerImg} />
+                            <Image resizeMode="contain" style={{ width: 48, height: 54 }} source={getMarkerImage(event)} />
                         </Marker>
                     );
                 })}
             </MapView>
 
             <View style={styles.footer}>
-                <Text style={styles.footerText}>X event(s) found</Text>
+                <Text style={styles.footerText}>
+                    {events.length} event(s) found · {volunteeredCount} volunteered
+                </Text>
                 <RectButton
                     style={[styles.smallButton, { backgroundColor: '#00A3FF' }]}
                     onPress={handleNavigateToCreateEvent}
@@ -87,14 +136,14 @@ export default function EventsMap(props: StackScreenProps<any>) {
 
 const styles = StyleSheet.create({
     container: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
         flex: 1,
         justifyContent: 'flex-end',
         alignItems: 'center',
     },
 
     mapStyle: {
-        ...StyleSheet.absoluteFillObject,
+        ...StyleSheet.absoluteFill,
     },
 
     logoutButton: {
@@ -137,42 +186,3 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 });
-
-interface event {
-    id: string;
-    position: {
-        latitude: number;
-        longitude: number;
-    };
-}
-
-const events: event[] = [
-    {
-        id: 'e3c95682-870f-4080-a0d7-ae8e23e2534f',
-        position: {
-            latitude: 51.105761,
-            longitude: -114.106943,
-        },
-    },
-    {
-        id: '98301b22-2b76-44f1-a8da-8c86c56b0367',
-        position: {
-            latitude: 51.04112,
-            longitude: -114.069325,
-        },
-    },
-    {
-        id: 'd7b8ea73-ba2c-4fc3-9348-9814076124bd',
-        position: {
-            latitude: 51.01222958257112,
-            longitude: -114.11677222698927,
-        },
-    },
-    {
-        id: 'd1a6b9ea-877d-4711-b8d7-af8f1bce4d29',
-        position: {
-            latitude: 51.010801915407036,
-            longitude: -114.07823592424393,
-        },
-    },
-];

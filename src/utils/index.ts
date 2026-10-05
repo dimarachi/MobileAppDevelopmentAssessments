@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import jwtDecode, { JwtPayload } from 'jwt-decode';
+import { jwtDecode, JwtPayload } from 'jwt-decode';
 import { Platform } from 'react-native';
 import { LatLng } from 'react-native-maps';
 
@@ -73,10 +73,10 @@ export const getEnvironentVariable = (variableName: string) => {
     }
 };
 
-export const getMapsUrl = (coordinates: LatLng): string => {
+export const getMapsUrl = (coordinates: LatLng, customLabel = 'Custom Label'): string => {
     const { latitude, longitude } = coordinates;
     const latLng = `${latitude},${longitude}`;
-    const label = 'Custom Label';
+    const label = encodeURIComponent(customLabel);
     return Platform.OS === 'ios' ? `maps:0,0?q=${label}@${latLng}` : `geo:0,0?q=${latLng}(${label})`;
 };
 

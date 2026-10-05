@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
@@ -7,11 +8,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
-    splash: {
-        image: './assets/splash.png',
-        resizeMode: 'cover',
-        backgroundColor: '#031A62',
-    },
     updates: {
         fallbackToCacheTimeout: 0,
     },
@@ -23,6 +19,20 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         favicon: './assets/favicon.png',
     },
     plugins: [
+        [
+            'expo-splash-screen',
+            {
+                image: './assets/splash.png',
+                resizeMode: 'cover',
+                backgroundColor: '#031A62',
+            },
+        ],
+        [
+            'expo-location',
+            {
+                locationWhenInUsePermission: 'The app uses your location to show nearby events on the map.',
+            },
+        ],
         [
             'expo-image-picker',
             {
