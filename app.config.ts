@@ -19,6 +19,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         favicon: './assets/favicon.png',
     },
     plugins: [
+        '@react-native-community/datetimepicker',
+        'expo-font',
+        'expo-status-bar',
         [
             'expo-splash-screen',
             {
