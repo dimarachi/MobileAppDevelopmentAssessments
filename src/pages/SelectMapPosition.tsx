@@ -7,14 +7,19 @@ import BigButton from '../components/BigButton';
 import * as MapSettings from '../constants/MapSettings';
 import mapMarkerImg from '../images/map-marker.png';
 
+//First step of the add event flow
+//The user taps the map to choose where the event will happen
+//Receives the user's location in route.params.initialPosition to center the map
 export default function SelectMapPosition({ navigation, route }: StackScreenProps<any>) {
     const initialPosition: LatLng = route.params?.initialPosition ?? MapSettings.DEFAULT_POSITION;
     const [position, setPosition] = useState<LatLng>();
 
+    //Places the marker where the user tapped
     const handleMapPress = (event: MapPressEvent) => {
         setPosition(event.nativeEvent.coordinate);
     };
 
+    //Goes to the event form with the chosen position
     const handleNext = () => {
         navigation.navigate('EventData', { position });
     };

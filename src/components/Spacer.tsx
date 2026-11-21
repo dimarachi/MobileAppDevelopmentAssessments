@@ -6,6 +6,7 @@ interface SpacerProps {
     horizontal?: boolean;
 }
 
+//Empty view used to add space between components
 export default function Spacer({ size = 8, horizontal = false }: SpacerProps) {
     return (
         <View

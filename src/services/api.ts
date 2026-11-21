@@ -16,18 +16,24 @@ const api = axios.create({
     baseURL: 'http://192.168.1.96:3333',
 });
 
+//Logs the user in with an email and password
+//Returns the user info and an access token
 export const authenticateUser = (email: string, password: string): Promise<AxiosResponse> => {
     return api.post(`/login`, { email, password });
 };
 
+//Returns the list of all events
 export const getEvents = (): Promise<AxiosResponse> => {
     return api.get(`/events`);
 };
 
+//Saves a new event to the API
+//Returns the saved event
 export const createEvent = (event: Event): Promise<AxiosResponse> => {
     return api.post(`/events`, event);
 };
 
+//Returns the user with the given id
 export const getUser =(id: string): Promise<AxiosResponse> => {
     return api.get(`/users/${id}`);
 };

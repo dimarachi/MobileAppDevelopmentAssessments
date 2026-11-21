@@ -12,6 +12,7 @@ interface BigButtonProps {
     onPress: () => void;
 }
 
+//Large rounded button with a label and an optional Feather icon
 export default function BigButton(props: BigButtonProps) {
     const styles = styling(props);
     const { featherIconName, label, style, disabled, onPress } = props;
@@ -24,6 +25,7 @@ export default function BigButton(props: BigButtonProps) {
     );
 }
 
+//Builds the styles from the props, so the color and disabled state can change the look
 const styling = ({ color, disabled }: BigButtonProps) =>
     StyleSheet.create({
         button: {

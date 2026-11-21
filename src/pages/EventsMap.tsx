@@ -17,6 +17,8 @@ import { getEventsFromNetworkOrCache } from '../services/caching';
 import { Event } from '../types/Event';
 import { parseDateFieldFromJSONResponse } from '../utils';
 
+//Main screen
+//Shows the upcoming events on a map, and lets the user add an event, open an event or log out
 export default function EventsMap(props: StackScreenProps<any>) {
     const { navigation } = props;
     const authenticationContext = useContext(AuthenticationContext);
@@ -26,6 +28,8 @@ export default function EventsMap(props: StackScreenProps<any>) {
     const [isMapReady, setIsMapReady] = useState(false);
     const isFocused = useIsFocused();
 
+    //Every time the screen is shown, loads the future events (from the API or the cache)
+    //and gets the user's location
     useEffect(() => {
         if (!isFocused) return;
         getEventsFromNetworkOrCache()
@@ -59,22 +63,28 @@ export default function EventsMap(props: StackScreenProps<any>) {
         mapViewRef.current?.fitToCoordinates(coordinates, { edgePadding: MapSettings.EDGE_PADDING });
     }, [isMapReady, events, userLocation]);
 
+    //Returns true when the logged in user volunteered for the event
     const hasVolunteered = (event: Event) => event.volunteersIds.includes(authenticationContext?.value?.id ?? '');
 
+    //Returns the marker image for the event:
+    //blue = user volunteered, grey = team is full, orange = still needs volunteers
     const getMarkerImage = (event: Event) => {
         if (hasVolunteered(event)) return mapMarkerBlueImg;
         if (event.volunteersIds.length >= event.volunteersNeeded) return mapMarkerGreyImg;
         return mapMarkerImg;
     };
 
+    //Opens the first step of the add event flow
     const handleNavigateToCreateEvent = () => {
         navigation.navigate('SelectMapPosition', { initialPosition: userLocation });
     };
 
+    //Opens the details of the selected event (the date is sent as text)
     const handleNavigateToEventDetails = (event: Event) => {
         navigation.navigate('EventDetails', { event: { ...event, dateTime: event.dateTime.toISOString() } });
     };
 
+    //Removes the saved user and token, then goes back to the login screen
     const handleLogout = async () => {
         AsyncStorage.multiRemove(['userInfo', 'accessToken']).then(() => {
             authenticationContext?.setValue(undefined);

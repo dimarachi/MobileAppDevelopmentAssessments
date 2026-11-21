@@ -1,6 +1,8 @@
 /// <reference types="node" />
 import { ExpoConfig, ConfigContext } from 'expo/config';
 
+//Expo configuration of the app (name, icons, plugins and permissions)
+//The API keys in 'extra' are read from the environment variables (.env file)
 export default ({ config }: ConfigContext): ExpoConfig => ({
     ...config,
     name: 'volunteam',

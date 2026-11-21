@@ -14,6 +14,7 @@ import { getEnvironentVariable } from '../utils';
 // When creating your app build or publishing, do not forget to run 'eas secret:push' command
 // to import your secret values to EAS.
 
+//Info about an image after it is uploaded
 export type UploadedImage = {
     url: string;
     filename: string;
@@ -21,6 +22,7 @@ export type UploadedImage = {
     thumb: { url: string };
 };
 
+//Response returned by the upload API
 type UploadResponse = {
     image: UploadedImage;
 };
@@ -31,6 +33,8 @@ const imageApi = axios.create({
     params: { key: getEnvironentVariable('FREEIMAGE_API_KEY'), action: 'upload', format: 'json' },
 });
 
+//Uploads an image (as a base64 string) to freeimage.host
+//Returns the uploaded image info (url, filename, size and thumbnail)
 export const uploadImage = (imageBase64: string): Promise<AxiosResponse<UploadResponse>> => {
     const data = new FormData();
     data.append('source', imageBase64);

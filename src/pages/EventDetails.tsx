@@ -13,6 +13,9 @@ import { Event } from '../types/Event';
 import { User } from '../types/User';
 import { formatAMPM, getMapsUrl } from '../utils';
 
+//Event details screen
+//Shows the event info, the volunteer status and the location on a map
+//Receives the event to show in route.params.event
 export default function EventDetails({ route }: StackScreenProps<any>) {
     const authenticationContext = useContext(AuthenticationContext);
     // dateTime is passed as an ISO string to keep the navigation params serializable
@@ -31,32 +34,39 @@ export default function EventDetails({ route }: StackScreenProps<any>) {
     });
     const formattedTime = formatAMPM(event.dateTime).toUpperCase();
 
+    //Loads the organizer info to show their name and to call or text them
     useEffect(() => {
         api.getUser(event.organizerId)
             .then((response) => setOrganizer(response.data))
             .catch((error) => console.log(error));
     }, [event.organizerId]);
 
+    //Opens the phone app to call the organizer
     const handleCall = () => {
         if (organizer) Linking.openURL(`tel:${organizer.mobile.replace(/\D/g, '')}`);
     };
 
+    //Opens the messages app to text the organizer
     const handleText = () => {
         if (organizer) Linking.openURL(`sms:${organizer.mobile.replace(/\D/g, '')}`);
     };
 
+    //Adds the user as a volunteer (not implemented yet)
     const handleVolunteer = () => {};
 
+    //Opens the share menu with the event name, date and description
     const handleShare = () => {
         Share.share({
             message: `${event.name} - ${formattedDate} at ${formattedTime}\n\n${event.description}\n\nJoin me as a volunteer on Volunteam!`,
         });
     };
 
+    //Opens the event location in the phone's maps app
     const handleGetDirections = () => {
         Linking.openURL(getMapsUrl(event.position, event.name));
     };
 
+    //Returns the status box: 'Volunteered', 'Team is full' or how many volunteers are still needed
     const renderStatus = () => {
         if (hasVolunteered) {
             return (

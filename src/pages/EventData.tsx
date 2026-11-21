@@ -32,6 +32,7 @@ const NAME_MAX_LENGTH = 50;
 const DESCRIPTION_MAX_LENGTH = 300;
 const VOLUNTEERS_MAX_DIGITS = 3; // up to 999
 
+//Names of the form fields
 type Field = 'name' | 'description' | 'volunteersNeeded' | 'date' | 'time' | 'picture';
 
 // Pickers open on today at 12:00 AM until a value is chosen
@@ -41,9 +42,13 @@ const getDefaultPickerDate = () => {
     return today;
 };
 
+//Shows an error message under a field (shows nothing when there is no message)
 const FieldError = ({ message, style }: { message?: string; style?: StyleProp<TextStyle> }) =>
     message ? <Text style={[styles.errorText, style]}>{message}</Text> : null;
 
+//Second step of the add event flow
+//Form to fill in the event info and picture, then save the event to the API
+//Receives the chosen map position in route.params.position
 export default function EventData({ navigation, route }: StackScreenProps<any>) {
     const position: LatLng = route.params?.position;
     const [name, setName] = useState('');
@@ -62,6 +67,7 @@ export default function EventData({ navigation, route }: StackScreenProps<any>) 
     const dateTime = date && time ? updateDateWithNewTime(date, time) : undefined;
     const isDateTimeInPast = dateTime !== undefined && dateTime <= new Date();
 
+    //Error message for each invalid field
     const errors: Partial<Record<Field | 'dateTime', string>> = {};
     if (!name.trim()) errors.name = 'Enter the event name.';
     else if (name.trim().length < NAME_MIN_LENGTH) errors.name = `Use at least ${NAME_MIN_LENGTH} characters.`;
@@ -75,10 +81,14 @@ export default function EventData({ navigation, route }: StackScreenProps<any>) 
 
     const isFormValid = Object.keys(errors).length === 0;
 
+    //Marks a field as used by the user
     const touch = (field: Field) => setTouched((prev) => ({ ...prev, [field]: true }));
+    //Returns the field error only if the user already used the field
     const visibleError = (field: Field) => (touched[field] ? errors[field] : undefined);
     const dateTimeError = visibleError('date') ?? visibleError('time') ?? errors.dateTime;
 
+    //Asks for permission, lets the user take or choose a picture, then uploads it
+    //'source' is where the picture comes from: the camera or the photo library
     const pickImage = async (source: 'camera' | 'library') => {
         const permission =
             source === 'camera'
@@ -112,6 +122,7 @@ export default function EventData({ navigation, route }: StackScreenProps<any>) 
         }
     };
 
+    //Shows a menu to take a photo or choose one from the library
     const handleAddPicture = () => {
         const options = ['Take Photo', 'Choose from Library', 'Cancel'];
         showActionSheetWithOptions({ options, cancelButtonIndex: 2 }, async (selectedIndex) => {
@@ -121,22 +132,26 @@ export default function EventData({ navigation, route }: StackScreenProps<any>) 
         });
     };
 
+    //Removes the chosen picture
     const handleRemovePicture = () => {
         setImage(undefined);
         touch('picture');
     };
 
+    //Closes the date/time picker
     const handlePickerClose = () => {
         if (pickerMode) touch(pickerMode);
         setPickerMode(undefined);
     };
 
+    //Saves the date or time chosen in the picker
     const handlePickerConfirm = (selected: Date) => {
         if (pickerMode === 'date') setDate(selected);
         else setTime(selected);
         handlePickerClose();
     };
 
+    //Creates the event from the form values, saves it to the API and goes back to the map
     const handleSave = async () => {
         if (!isFormValid || !dateTime || !image) return;
 

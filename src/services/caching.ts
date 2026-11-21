@@ -2,8 +2,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Network from 'expo-network';
 import * as api from './api';
 
+//Key used to save the events in the cache
 export const EVENTS_CACHE_KEY = 'volunteem_events';
 
+//Returns true when the device is connected to the internet, false otherwise
 export const isNetworkAvailable = async (): Promise<boolean> => {
     try {
         const { isConnected, isInternetReachable } = await Network.getNetworkStateAsync();
@@ -28,11 +30,14 @@ export const getEventsFromNetworkOrCache = async (): Promise<any[]> => {
     return getFromCache<any[]>(EVENTS_CACHE_KEY);
 };
 
+//Saves a value in the device storage under the given key (the value is saved as JSON)
 export const setInCache = (key: string, value: any) => {
     const jsonValue = JSON.stringify(value);
     return AsyncStorage.setItem(key, jsonValue);
 };
 
+//Returns the value saved under the given key
+//Rejects the promise when the key is not in the cache
 export const getFromCache = async <T>(key: string): Promise<T> => {
     const json = await AsyncStorage.getItem(key);
     return await (json != null ? Promise.resolve(JSON.parse(json)) : Promise.reject(`Key "${key}" not in cache`));

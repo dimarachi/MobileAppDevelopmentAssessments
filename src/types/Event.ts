@@ -1,3 +1,4 @@
+//A volunteering event shown on the map
 export interface Event {
     id: string;
     dateTime: Date;

@@ -15,6 +15,7 @@ import EventData from '../pages/EventData';
 import { AuthenticationContext, AuthenticationContextObject } from '../context/AuthenticationContext';
 import { User } from '../types/User';
 
+//Header style shared by the screens that show a header
 const headerOptions: StackNavigationOptions = {
     headerShown: true,
     headerTintColor: '#00A3FF',
@@ -35,7 +36,10 @@ const addEventHeaderOptions = ({ navigation }: { navigation: any }): StackNaviga
     ),
 });
 
+//Sets up the app navigation (list of screens) and shares the logged in user
+//with all screens through the AuthenticationContext
 export default function Routes() {
+    //Logged in user (undefined when nobody is logged in)
     const [authenticatedUser, setAuthenticatedUser] = useState<User>();
 
     const authenticationContextObj: AuthenticationContextObject = {
