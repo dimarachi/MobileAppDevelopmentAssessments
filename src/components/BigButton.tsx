@@ -12,18 +12,20 @@ interface BigButtonProps {
     onPress: () => void;
 }
 
+//Large rounded button with a label and an optional Feather icon
 export default function BigButton(props: BigButtonProps) {
     const styles = styling(props);
-    const { featherIconName, label, style, onPress } = props;
+    const { featherIconName, label, style, disabled, onPress } = props;
 
     return (
-        <RectButton style={[styles.button, style]} onPress={onPress}>
+        <RectButton style={[styles.button, style]} enabled={!disabled} onPress={onPress}>
             {featherIconName && <Feather style={styles.icon} name={featherIconName} size={24} color="#FFF" />}
             <Text style={styles.label}>{label}</Text>
         </RectButton>
     );
 }
 
+//Builds the styles from the props, so the color and disabled state can change the look
 const styling = ({ color, disabled }: BigButtonProps) =>
     StyleSheet.create({
         button: {

@@ -15,6 +15,9 @@ import { getFromCache, setInCache } from '../services/caching';
 import { User } from '../types/User';
 import { isTokenExpired, sanitizeEmail, validateEmail } from '../utils';
 
+//Login screen
+//Lets the user log in with email and password, and skips to the map
+//when a valid access token is already saved on the device
 export default function Login({ navigation }: StackScreenProps<any>) {
     const authenticationContext = useContext(AuthenticationContext);
     const [email, setEmail] = useState('');
@@ -27,6 +30,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
     const [isAuthenticating, setIsAuthenticating] = useState<boolean>(false);
     const isFocused = useIsFocused();
 
+    //Loads the saved user and token from the cache, and shows an alert when there is a login error
     useEffect(() => {
         getFromCache('userInfo').then(
             (cachedUserInfo) => authenticationContext?.setValue(cachedUserInfo as User),
@@ -40,10 +44,14 @@ export default function Login({ navigation }: StackScreenProps<any>) {
             Alert.alert('Authentication Error', authError, [{ text: 'Ok', onPress: () => setAuthError(undefined) }]);
     }, [authError]);
 
+    //Goes straight to the map when the user is already logged in
     useEffect(() => {
         if (accessTokenIsValid && authenticationContext?.value) navigation.navigate('EventsMap');
     }, [accessTokenIsValid]);
 
+    //Sends the email and password to the API
+    //On success, saves the user and token in the cache and opens the map
+    //On failure, shows the error message
     const handleAuthentication = () => {
         if (formIsValid()) {
             setIsAuthenticating(true);
@@ -66,18 +74,21 @@ export default function Login({ navigation }: StackScreenProps<any>) {
         }
     };
 
+    //Returns true when both the email and password are valid
     const formIsValid = () => {
         const emailIsValid = !isEmailInvalid();
         const passwordIsValid = !isPasswordInvalid();
         return emailIsValid && passwordIsValid;
     };
 
+    //Returns true when the password has less than 6 characters (also marks the field red)
     const isPasswordInvalid = (): boolean => {
         const invalidCheck = password.length < 6;
         setPasswordIsInvalid(invalidCheck);
         return invalidCheck ? true : false;
     };
 
+    //Returns true when the email format is invalid (also marks the field red)
     const isEmailInvalid = (): boolean => {
         const invalidCheck = !validateEmail(email);
         setEmailIsInvalid(invalidCheck);
@@ -91,7 +102,7 @@ export default function Login({ navigation }: StackScreenProps<any>) {
             colors={['#7048D8', '#7048D8']}
             style={styles.gradientContainer}
         >
-            {isFocused && <StatusBar animated translucent style="light" />}
+            {isFocused && <StatusBar animated style="light" />}
             <KeyboardAwareScrollView
                 style={styles.container}
                 contentContainerStyle={{
